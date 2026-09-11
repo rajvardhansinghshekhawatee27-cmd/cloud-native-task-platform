@@ -12,5 +12,15 @@ services:
     volumes:
       - postgres_data:/var/lib/postgresql/data
 
+  app:
+    image: task-platform:2.0
+    container_name: task-platform-app
+    environment:
+      DATABASE_URL: postgresql+psycopg2://taskuser:taskpassword@postgres:5432/taskdb
+    ports:
+      - "8000:8000"
+    depends_on:
+      - postgres
+
 volumes:
   postgres_data:
