@@ -50,3 +50,6 @@ jobs:
         working-directory: app
         run: |
           python -m pytest
+      - name: Build Docker image
+        run: |
+          docker build -t task-platform:ci ./app
