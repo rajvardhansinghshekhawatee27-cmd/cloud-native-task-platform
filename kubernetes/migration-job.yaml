@@ -1,0 +1,45 @@
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: task-platform-migration
+  namespace: task-platform
+spec:
+  backoffLimit: 3
+  template:
+    metadata:
+      labels:
+        app: task-platform-migration
+    spec:
+      restartPolicy: OnFailure
+
+      containers:
+        - name: migration
+          image: localhost:5000/task-platform:3.1
+          imagePullPolicy: Always
+
+          command:
+            - alembic
+            - upgrade
+            - head
+
+          env:
+            - name: POSTGRES_DB
+              valueFrom:
+                secretKeyRef:
+                  name: task-platform-secret
+                  key: POSTGRES_DB
+
+            - name: POSTGRES_USER
+              valueFrom:
+                secretKeyRef:
+                  name: task-platform-secret
+                  key: POSTGRES_USER
+
+            - name: POSTGRES_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: task-platform-secret
+                  key: POSTGRES_PASSWORD
+
+            - name: DATABASE_URL
+              value: "postgresql+psycopg2://$(POSTGRES_USER):$(POSTGRES_PASSWORD)@postgres:5432/$(POSTGRES_DB)"
