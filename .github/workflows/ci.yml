@@ -75,6 +75,37 @@ jobs:
             -t ${{ env.ECR_REPOSITORY }}:${{ github.sha }} \
             ./app
 
+      - name: Start Docker container
+        run: |
+          docker run \
+            -d \
+            --name task-platform-test \
+            -p 8000:8000 \
+            -e DATABASE_URL="${{ env.DATABASE_URL }}" \
+            ${{ env.ECR_REPOSITORY }}:${{ github.sha }}
+
+      - name: Wait for application
+        run: |
+          for i in {1..30}; do
+            if curl --fail http://localhost:8000/health; then
+              echo "Application is healthy"
+              exit 0
+            fi
+
+            echo "Waiting for application..."
+            sleep 2
+          done
+
+          echo "Application failed health check"
+          docker logs task-platform-test
+          exit 1
+
+      - name: Stop test container
+        if: always()
+        run: |
+          docker stop task-platform-test || true
+          docker rm task-platform-test || true
+
       - name: Tag Docker image
         run: |
           docker tag \
