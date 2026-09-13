@@ -15,10 +15,11 @@ spec:
     spec:
       containers:
         - name: task-platform
-          image: localhost:5000/task-platform:3.1
+          image: localhost:5000/task-platform:4.3
           imagePullPolicy: Always
           ports:
             - containerPort: 8000
+              name: http
 
           env:
             - name: POSTGRES_DB
@@ -70,10 +71,33 @@ kind: Service
 metadata:
   name: task-platform
   namespace: task-platform
+  labels:
+    app: task-platform
 spec:
   type: ClusterIP
   selector:
     app: task-platform
   ports:
-    - port: 8000
-      targetPort: 8000
+    - name: http
+      port: 8000
+      targetPort: http
+
+---
+apiVersion: monitoring.coreos.com/v1
+kind: ServiceMonitor
+metadata:
+  name: task-platform
+  namespace: monitoring
+  labels:
+    release: monitoring
+spec:
+  namespaceSelector:
+    matchNames:
+      - task-platform
+  selector:
+    matchLabels:
+      app: task-platform
+  endpoints:
+    - port: http
+      path: /metrics
+      interval: 15s
