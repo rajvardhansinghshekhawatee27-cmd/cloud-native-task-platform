@@ -106,6 +106,16 @@ jobs:
           docker stop task-platform-test || true
           docker rm task-platform-test || true
 
+      - name: Scan Docker image with Trivy
+        uses: aquasecurity/trivy-action@0.33.1
+        with:
+          image-ref: '${{ env.ECR_REPOSITORY }}:${{ github.sha }}'
+          format: 'table'
+          exit-code: '1'
+          ignore-unfixed: true
+          vuln-type: 'os,library'
+          severity: 'CRITICAL'
+
       - name: Tag Docker image
         run: |
           docker tag \
